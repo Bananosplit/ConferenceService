@@ -1,0 +1,6 @@
+@ConferenceService_HostAddress = http://localhost:5186
+
+GET {{ConferenceService_HostAddress}}/api/bid
+Accept: application/json
+
+###
