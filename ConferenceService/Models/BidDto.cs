@@ -2,18 +2,14 @@
 
 namespace ConferenceService.Models
 {
-    public class Bid
+    public class BidDto
     {
-        
-        public int Id { get; set; }
+        [Required]
         public Guid UserId { get; set; }
+        [Required]
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Plan { get; set; }
-        public bool? IsSent { get; set; }
-        public DateTime SendDate { get; set; }
-
         public int ActivityTypeId { get; set; }
-        public ActivityType ActivityType { get; set; }
     }
 }

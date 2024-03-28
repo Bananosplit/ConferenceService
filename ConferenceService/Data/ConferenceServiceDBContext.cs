@@ -7,10 +7,14 @@ namespace ConferenceService.Data
     public class ConferenceServiceDBContext : DbContext
     {
         public DbSet<Bid> Bids { get; set; }
-        public ConferenceServiceDBContext(DbContextOptions options) : base(options) {}
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+        public DbSet<ActivityType> ActivityTypes { get; set; }
+        public ConferenceServiceDBContext(DbContextOptions options) : base(options) =>
+             Database.EnsureCreated();
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
             ConfigureBidsEntity(modelBuilder);
+            ConfigureActivityTypeEntity(modelBuilder);
+        }
 
         private void ConfigureBidsEntity(ModelBuilder modelBuilder)
         {
@@ -30,19 +34,19 @@ namespace ConferenceService.Data
             modelBuilder.Entity<Bid>()
                 .Property(b => b.Plan)
                 .HasColumnType("varchar(1000)");
+        }
 
-            modelBuilder.HasPostgresEnum<ActivityType>();
+        private void ConfigureActivityTypeEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ActivityType>()
+                .Property(b => b.Name).IsRequired();
 
-            modelBuilder.Entity<Bid>()
-                .Property(e => e.ActivityType)
-                .HasColumnType("activity_type")
-                .IsRequired();
-
-        /*    modelBuilder.Entity<Bid>()
-                .Property(b => b.ActivityType)
-                .HasColumnName("Activity_Type")
-                .HasColumnType("activity_type")
-                .IsRequired();*/
+            modelBuilder.Entity<ActivityType>()
+               .HasData(
+                new ActivityType() { Id = 1, Name = "Report" },
+                new ActivityType() { Id = 2, Name = "MasterClass" },
+                new ActivityType() { Id = 3, Name = "Discussion" }
+                );
         }
     }
 }
