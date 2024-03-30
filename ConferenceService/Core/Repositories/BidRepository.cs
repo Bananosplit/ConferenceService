@@ -32,12 +32,10 @@ namespace ConferenceService.Data.Repositories
                 return null;
             }
         }
-
         public async Task<List<Bid>?> GetBidsByDate(DateTime date, bool isSumbited = false)
         {
             var bids = new List<Bid>();
-            using var transaction = dBContext.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
-
+         
             try
             {
                 bids = await dBContext.Bids
@@ -45,8 +43,6 @@ namespace ConferenceService.Data.Repositories
                     .Where(b => b.IsSent == isSumbited)
                     .Where(b => b.SendDate > date)
                     .ToListAsync();
-
-                 await transaction.Result.CommitAsync();
             }
             catch
             {
@@ -84,7 +80,6 @@ namespace ConferenceService.Data.Repositories
             
             return true;
         }
-
         public async Task<bool> Update(Bid bid)
         {
             try
@@ -99,7 +94,6 @@ namespace ConferenceService.Data.Repositories
 
             return true;
         }
-
         public async Task<bool> Delete(Bid bid)
         {
 
@@ -115,7 +109,6 @@ namespace ConferenceService.Data.Repositories
             
             return true;
         }
-
         
     }
 }

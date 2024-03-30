@@ -1,8 +1,11 @@
-﻿using ConferenceService.Core.Repositories.Interfaces;
+﻿using ConferenceService.Core;
+using ConferenceService.Core.Repositories.Interfaces;
 using ConferenceService.Data;
 using ConferenceService.Data.Repositories;
+using ConferenceService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace ConferenceService.Controllers
 {
@@ -10,17 +13,27 @@ namespace ConferenceService.Controllers
     [ApiController]
     public class GarbageBids : ControllerBase
     {
-        private readonly IBidRepository bidRepository;
+        private readonly IUnitOfWork unitOfwork;
 
-        public GarbageBids(IBidRepository bidRepository) =>
-            this.bidRepository = bidRepository;
+        public GarbageBids(IUnitOfWork unitOfwork) =>
+            this.unitOfwork = unitOfwork;
 
         [HttpGet]
         [Route("/[action]")]
         public async Task<IActionResult> GetSubmitedBidsByDate([FromQuery] DateTime date)
         {
+            List<Bid>? bids = null;
 
-            var bids = await bidRepository.GetBidsByDate(date, true);
+            unitOfwork.BeginTransaction(IsolationLevel.RepeatableRead);
+            try
+            {
+                bids = await unitOfwork.Bids.GetBidsByDate(date, true);
+                unitOfwork.Commit();
+            }
+            catch
+            {
+                unitOfwork.RollBack();
+            }
 
             if (bids is null)
                 return BadRequest("Bids is no found");
@@ -35,7 +48,20 @@ namespace ConferenceService.Controllers
         [Route("/[action]")]
         public async Task<IActionResult> GetNoSubmitedBidsByDate([FromQuery] DateTime date)
         {
-            var bids = await bidRepository.GetBidsByDate(date);
+            List<Bid>? bids = null;
+
+            unitOfwork.BeginTransaction(IsolationLevel.RepeatableRead);
+
+            try
+            {
+                bids = await unitOfwork.Bids.GetBidsByDate(date);
+                unitOfwork.Commit();
+            }
+            catch
+            {
+                unitOfwork.RollBack();
+            }
+            
 
             if (bids is null)
                 return BadRequest("Bids is no found");
@@ -50,7 +76,7 @@ namespace ConferenceService.Controllers
         [Route("/[action]")]
         public async Task<IActionResult> GetNoSubmitedBidByUserId([FromQuery] Guid userID)
         {
-            var bid = await bidRepository.Get(userID);
+            var bid = await unitOfwork.Bids.Get(userID);
 
             if (bid is null || bid.IsSent == true)
                 return BadRequest("Bids is no found");
@@ -62,7 +88,7 @@ namespace ConferenceService.Controllers
         [Route("/[action]")]
         public async Task<IActionResult> GetBidById([FromQuery] int id)
         {
-            var bid = await bidRepository.Get(id);
+            var bid = await unitOfwork.Bids.Get(id);
 
             if (bid is null)
                 return BadRequest("Bids is no found");

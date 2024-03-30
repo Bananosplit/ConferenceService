@@ -1,3 +1,4 @@
+using ConferenceService.Core;
 using ConferenceService.Core.Repositories.Interfaces;
 using ConferenceService.Data;
 using ConferenceService.Data.Repositories;
@@ -11,9 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ConferenceServiceDBContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IBidRepository, BidRepository>();
-builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
-
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
