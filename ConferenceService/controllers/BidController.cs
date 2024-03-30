@@ -1,8 +1,8 @@
-﻿using ConferenceService.Data;
+﻿using ConferenceService.Core.Repositories.Interfaces;
+using ConferenceService.Data.Repositories;
 using ConferenceService.Models;
 using ConferenceService.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace ConferenceService.controllers
@@ -11,11 +11,14 @@ namespace ConferenceService.controllers
     [ApiController]
     public class BidController : ControllerBase
     {
-        private readonly ConferenceServiceDBContext dBContext;
+        private readonly IActivityRepository activityRepository;
+        private readonly IBidRepository bidRepository;
 
-        public BidController(ConferenceServiceDBContext dBContext)
+
+        public BidController(IActivityRepository activityRepository, IBidRepository bidRepository)
         {
-            this.dBContext = dBContext;
+            this.activityRepository = activityRepository;
+            this.bidRepository = bidRepository;
         }
 
         [HttpPost]
@@ -25,24 +28,26 @@ namespace ConferenceService.controllers
             if (!ModelState.IsValid)
                 return BadRequest("Data is not valid");
 
+            var existBid = await bidRepository.Get(bidDto.UserId);
 
-            var existBid = await dBContext.Bids.FirstOrDefaultAsync(b => b.UserId == bidDto.UserId);
-
-            if (existBid is not null)
+            if (existBid != null)
                 return BadRequest("The Bid already EXISTS. You cant create more than one bid");
 
             var bid = new Bid()
             {
                 UserId = bidDto.UserId,
                 Name = bidDto?.Name,
-                Description = bidDto?.Description,
+                Description = bidDto?.Description ?? "",
                 Plan = bidDto?.Plan,
                 ActivityTypeId = bidDto.ActivityTypeId,
-                SendDate = DateTime.UtcNow
+                SendDate = DateTime.UtcNow,
+                IsSent = false
             };
 
-            await dBContext.Bids.AddAsync(bid);
-            await dBContext.SaveChangesAsync();
+            var result = await bidRepository.Create(bid);
+
+            if (result == false)
+                return Conflict();
 
             return Ok();
         }
@@ -54,25 +59,27 @@ namespace ConferenceService.controllers
             if (!ModelState.IsValid)
                 return BadRequest("The bid not found");
 
-            var existBid = await dBContext.Bids.FirstOrDefaultAsync(b => b.UserId == bid.UserId);
+            var existBid = await bidRepository.Get(bid.UserId);
 
             if (existBid == null)
-                return BadRequest("The bid not found");
+                return NotFound("The bid not found");
 
             if (existBid.IsSent == true)
                 return BadRequest("You can't edit already sent bid");
 
-            dBContext.Bids.Update(existBid.FillBid(bid));
-            await dBContext.SaveChangesAsync();
+            var result = await bidRepository.Update(existBid.FillBid(bid));
+
+            if (result == false)
+                return Conflict();
 
             return Ok();
         }
 
         [HttpDelete]
         [Route("/[action]")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var existBid = dBContext.Bids.FirstOrDefault(b => b.Id == id);
+            var existBid = await bidRepository.Get(id);
 
             if (existBid is null)
                 return BadRequest("The bid not found");
@@ -80,35 +87,30 @@ namespace ConferenceService.controllers
             if (existBid.IsSent == true)
                 return BadRequest("You can't delete already sent bid");
 
-            dBContext.Bids.Remove(existBid);
-            await dBContext.SaveChangesAsync();
+            var result = await bidRepository.Delete(existBid);
+
+            if (result == false)
+                return Conflict();
 
             return Ok();
         }
 
         [HttpPost]
         [Route("/[action]")]
-        public async Task<IActionResult> SendToCommission(int id)
+        public async Task<IActionResult> SendToCommission(Guid id)
         {
-            var existBid = await dBContext.Bids.Include(b => b.ActivityType).FirstOrDefaultAsync(b => b.Id == id);
+            var existBid = await bidRepository.Get(id);
 
-            if (existBid is null)
-                return BadRequest("The bid not found");
-
-            if (existBid.IsSent == true)
-                return BadRequest("The bid was sent");
-
-            if (string.IsNullOrEmpty(existBid.Plan))
-                return BadRequest("The plan must be filled");
-
-            if (string.IsNullOrEmpty(existBid.ActivityType.Name))
-                return BadRequest("The activity type must be filled");
+            if (ValidateBid(existBid, out string message) == false)
+                return BadRequest(message);
 
             existBid.IsSent = true;
             existBid.SendDate = DateTime.UtcNow;
 
-            dBContext.Bids.Update(existBid);
-            await dBContext.SaveChangesAsync();
+            var result = await bidRepository.Update(existBid);
+
+            if (result == false)
+                return Conflict();
 
             return Ok();
         }
@@ -117,12 +119,41 @@ namespace ConferenceService.controllers
         [Route("/[action]")]
         public async Task<ActionResult<List<string>>> GetActivityList()
         {
-            var types = await dBContext.ActivityTypes.Select(t => t.Name).ToListAsync();
+            var types = await activityRepository.GetAll();
 
             if (types is null || types.Count == 0)
                 return NotFound();
 
             return Ok(types);
         }
+
+        private static bool ValidateBid(Bid? existBid, out string message)
+        {
+            message = string.Empty;
+
+            if (existBid is null)
+            {
+                message = "The bid not found";
+                return false;
+            }
+            else if (existBid.IsSent == true)
+            {
+                message = "The bid was sent";
+                return false;
+            }
+            else if (string.IsNullOrEmpty(existBid.Plan))
+            {
+                message = "The plan must be filled";
+                return false;
+            }
+            else if (string.IsNullOrEmpty(existBid.ActivityType.Name))
+            {
+                message = "The activity type must be filled";
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }

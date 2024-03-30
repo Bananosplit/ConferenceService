@@ -1,8 +1,9 @@
+using ConferenceService.Core.Repositories.Interfaces;
 using ConferenceService.Data;
+using ConferenceService.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
@@ -10,10 +11,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ConferenceServiceDBContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IBidRepository, BidRepository>();
+builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseExceptionHandler("/Error");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
