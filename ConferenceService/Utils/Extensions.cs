@@ -42,7 +42,7 @@ namespace ConferenceService.Utils
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(config.GetConnectionString("DefaultConnection"));
             dataSourceBuilder.MapEnum<ActivityType>();
             var ds = dataSourceBuilder.Build();
-
+            
             services.AddDbContext<ConferenceServiceDBContext>(opt =>opt.UseNpgsql(ds, d => d.MigrationsAssembly("DAL")));
             
             return services;

@@ -22,48 +22,20 @@ namespace ConferenceService.Controllers
 
         [HttpGet]
         [Route("/[action]")]
-        public async Task<IActionResult> GetSubmitedBidsByDate([FromQuery] DateTime date)
+        public async Task<IActionResult> GetSubmitedBidsByDate([FromQuery] DateTime date, [FromQuery] bool isSent)
         {
             List<Bid>? bids = null;
 
             dBContext.Database.BeginTransaction(IsolationLevel.RepeatableRead);
             try
             {
-                bids = await bidRepo.GetBidsByDate(date, true);
+                bids = await bidRepo.GetBidsByDate(date, isSent);
                 dBContext.Database.CommitTransaction();
             }
             catch
             {
                 dBContext.Database.RollbackTransaction();
             }
-
-            if (bids is null)
-                return BadRequest("Bids is no found");
-
-            if (bids.Count == 0)
-                return Ok("no bids by date");
-
-            return Ok(bids);
-        }
-
-        [HttpGet]
-        [Route("/[action]")]
-        public async Task<IActionResult> GetNoSubmitedBidsByDate([FromQuery] DateTime date)
-        {
-            List<Bid>? bids = null;
-
-            dBContext.Database.BeginTransaction(IsolationLevel.RepeatableRead);
-
-            try
-            {
-                bids = await bidRepo.GetBidsByDate(date);
-                dBContext.Database.CommitTransaction();
-            }
-            catch
-            {
-                dBContext.Database.RollbackTransaction();
-            }
-            
 
             if (bids is null)
                 return BadRequest("Bids is no found");

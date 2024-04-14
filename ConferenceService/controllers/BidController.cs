@@ -1,4 +1,5 @@
-﻿using ConferenceService.Models;
+﻿using App.Utils;
+using ConferenceService.Models;
 using ConferenceService.Utils;
 using DAL.Entity;
 using DAL.Repositories.Interfaces;
@@ -45,12 +46,13 @@ namespace ConferenceService.controllers
             return Ok();
         }
 
-        [HttpPatch]
-        [Route("/[action]")]
-        public async Task<IActionResult> Edit([FromBody] BidDto bid)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Edit([FromBody] BidDto bid, Guid id)
         {
             if (!ModelState.IsValid)
                 return BadRequest("The bid not found");
+
+            await Console.Out.WriteLineAsync(id.ToString());
 
             var existBid = await bidRepo.Get(bid.UserId);
 
@@ -87,13 +89,12 @@ namespace ConferenceService.controllers
             return Ok();
         }
 
-        [HttpPost]
-        [Route("/[action]")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> SendToCommission(Guid id)
         {
             Bid? existBid = await bidRepo.Get(id);
 
-            if (ValidateBid(existBid, out string message) == false)
+            if (ServiceValidation.ValidateBid(existBid, out string message) == false)
                 return BadRequest(message);
 
             existBid.IsSent = true;
@@ -114,34 +115,5 @@ namespace ConferenceService.controllers
 
             return Ok(types);
         }
-
-        private static bool ValidateBid(Bid? existBid, out string message)
-        {
-            message = string.Empty;
-
-            if (existBid is null)
-            {
-                message = "The bid not found";
-                return false;
-            }
-            else if (existBid.IsSent == true)
-            {
-                message = "The bid was sent";
-                return false;
-            }
-            else if (string.IsNullOrEmpty(existBid.Plan))
-            {
-                message = "The plan must be filled";
-                return false;
-            }
-            else if (existBid.ActivityType != ActivityType.Report)
-            {
-                message = "The activity type must be filled";
-                return false;
-            }
-
-            return true;
-        }
-
     }
 }
