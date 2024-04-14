@@ -1,6 +1,6 @@
-﻿using ConferenceService.Models;
+﻿using DAL.Entity;
 
-namespace ConferenceService.Core.Repositories.Interfaces
+namespace DAL.Repositories.Interfaces
 {
     public interface IBidRepository
     {
@@ -10,5 +10,6 @@ namespace ConferenceService.Core.Repositories.Interfaces
         Task<bool> Create(Bid bid);
         Task<bool> Update(Bid bid);
         Task<bool> Delete(Bid bid);
+        Task<ActivityType> GetActivityType();
     }
 }

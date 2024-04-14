@@ -1,8 +1,6 @@
-﻿using ConferenceService.Core;
-using ConferenceService.Core.Repositories.Interfaces;
-using ConferenceService.Data;
-using ConferenceService.Data.Repositories;
-using ConferenceService.Models;
+﻿using DAL.Data;
+using DAL.Entity;
+using DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -13,10 +11,14 @@ namespace ConferenceService.Controllers
     [ApiController]
     public class GarbageBids : ControllerBase
     {
-        private readonly IUnitOfWork unitOfwork;
+        private readonly IBidRepository bidRepo;
+        private readonly ConferenceServiceDBContext dBContext;
 
-        public GarbageBids(IUnitOfWork unitOfwork) =>
-            this.unitOfwork = unitOfwork;
+        public GarbageBids(IBidRepository bidRepo, ConferenceServiceDBContext dBContext)
+        {
+            this.bidRepo = bidRepo;
+            this.dBContext = dBContext;
+        }
 
         [HttpGet]
         [Route("/[action]")]
@@ -24,15 +26,15 @@ namespace ConferenceService.Controllers
         {
             List<Bid>? bids = null;
 
-            unitOfwork.BeginTransaction(IsolationLevel.RepeatableRead);
+            dBContext.Database.BeginTransaction(IsolationLevel.RepeatableRead);
             try
             {
-                bids = await unitOfwork.Bids.GetBidsByDate(date, true);
-                unitOfwork.Commit();
+                bids = await bidRepo.GetBidsByDate(date, true);
+                dBContext.Database.CommitTransaction();
             }
             catch
             {
-                unitOfwork.RollBack();
+                dBContext.Database.RollbackTransaction();
             }
 
             if (bids is null)
@@ -50,16 +52,16 @@ namespace ConferenceService.Controllers
         {
             List<Bid>? bids = null;
 
-            unitOfwork.BeginTransaction(IsolationLevel.RepeatableRead);
+            dBContext.Database.BeginTransaction(IsolationLevel.RepeatableRead);
 
             try
             {
-                bids = await unitOfwork.Bids.GetBidsByDate(date);
-                unitOfwork.Commit();
+                bids = await bidRepo.GetBidsByDate(date);
+                dBContext.Database.CommitTransaction();
             }
             catch
             {
-                unitOfwork.RollBack();
+                dBContext.Database.RollbackTransaction();
             }
             
 
@@ -76,7 +78,7 @@ namespace ConferenceService.Controllers
         [Route("/[action]")]
         public async Task<IActionResult> GetNoSubmitedBidByUserId([FromQuery] Guid userID)
         {
-            var bid = await unitOfwork.Bids.Get(userID);
+            var bid = await bidRepo.Get(userID);
 
             if (bid is null || bid.IsSent == true)
                 return BadRequest("Bids is no found");
@@ -88,7 +90,7 @@ namespace ConferenceService.Controllers
         [Route("/[action]")]
         public async Task<IActionResult> GetBidById([FromQuery] int id)
         {
-            var bid = await unitOfwork.Bids.Get(id);
+            var bid = await bidRepo.Get(id);
 
             if (bid is null)
                 return BadRequest("Bids is no found");

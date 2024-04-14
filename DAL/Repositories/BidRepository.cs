@@ -1,12 +1,10 @@
-﻿using ConferenceService.Core.Repositories.Interfaces;
-using ConferenceService.Models;
-using ConferenceService.Utils;
-using Microsoft.AspNetCore.Mvc;
+﻿using DAL.Data;
+using DAL.Entity;
+using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Data;
 
-namespace ConferenceService.Data.Repositories
+namespace DAL.Repositories
 {
     public class BidRepository : IBidRepository
     {
@@ -22,8 +20,7 @@ namespace ConferenceService.Data.Repositories
             try
             {
                 var existBid = await dBContext.Bids
-                    .Include(b => b.ActivityType)
-                    .FirstOrDefaultAsync(b => b.UserId == id);
+                    .FirstOrDefaultAsync(b => b.Id == id);
 
                 return existBid;
             }
@@ -35,7 +32,7 @@ namespace ConferenceService.Data.Repositories
         public async Task<List<Bid>?> GetBidsByDate(DateTime date, bool isSumbited = false)
         {
             var bids = new List<Bid>();
-         
+
             try
             {
                 bids = await dBContext.Bids
@@ -53,11 +50,12 @@ namespace ConferenceService.Data.Repositories
         }
         public async Task<Bid?> Get(int id)
         {
+            var idd = Guid.NewGuid();
             try
             {
                 var existBid = await dBContext.Bids
                     .Include(b => b.ActivityType)
-                    .FirstOrDefaultAsync(b => b.Id == id);
+                    .FirstOrDefaultAsync(b => b.Id == idd);
 
                 return existBid;
             }
@@ -77,7 +75,7 @@ namespace ConferenceService.Data.Repositories
             {
                 return false;
             }
-            
+
             return true;
         }
         public async Task<bool> Update(Bid bid)
@@ -106,9 +104,13 @@ namespace ConferenceService.Data.Repositories
             {
                 return false;
             }
-            
+
             return true;
         }
-        
+
+        public Task<ActivityType> GetActivityType()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
