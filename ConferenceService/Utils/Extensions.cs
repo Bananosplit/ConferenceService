@@ -39,12 +39,11 @@ namespace ConferenceService.Utils
 
         public static IServiceCollection AddConferenceDbContext(this IServiceCollection services, IConfiguration config) 
         {
-
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(config.GetConnectionString("DefaultConnection"));
             dataSourceBuilder.MapEnum<ActivityType>();
             var ds = dataSourceBuilder.Build();
 
-            services.AddDbContext<ConferenceServiceDBContext>(opt =>opt.UseNpgsql(ds));
+            services.AddDbContext<ConferenceServiceDBContext>(opt =>opt.UseNpgsql(ds, d => d.MigrationsAssembly("DAL")));
             
             return services;
         }

@@ -16,7 +16,6 @@ namespace ConferenceService.controllers
         public BidController(IBidRepository bidRepo) => this.bidRepo = bidRepo;
 
         [HttpPost]
-        [Route("/[action]")]
         public async Task<IActionResult> Create([FromBody] BidDto bidDto)
         {
             if (!ModelState.IsValid)
@@ -70,7 +69,6 @@ namespace ConferenceService.controllers
         }
 
         [HttpDelete]
-        [Route("/[action]")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var existBid = await bidRepo.Get(id);
@@ -110,7 +108,6 @@ namespace ConferenceService.controllers
         }
 
         [HttpGet]
-        [Route("/[action]")]
         public async Task<ActionResult<List<string>>> GetActivityList()
         {
             var types = await bidRepo.GetActivityType();
