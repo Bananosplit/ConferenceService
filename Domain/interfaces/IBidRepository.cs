@@ -1,6 +1,6 @@
-﻿using DAL.Entity;
+﻿using Domain.Entity;
 
-namespace DAL.Repositories.Interfaces
+namespace Domain.Repositories.Interfaces
 {
     public interface IBidRepository
     {
@@ -10,6 +10,5 @@ namespace DAL.Repositories.Interfaces
         Task<bool> Create(Bid bid);
         Task<bool> Update(Bid bid);
         Task<bool> Delete(Bid bid);
-        Task<ActivityType> GetActivityType();
     }
 }

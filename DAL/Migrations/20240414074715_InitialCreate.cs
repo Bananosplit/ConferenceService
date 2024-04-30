@@ -1,5 +1,5 @@
 ﻿using System;
-using DAL.Entity;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

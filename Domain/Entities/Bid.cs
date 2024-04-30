@@ -1,4 +1,6 @@
-﻿namespace DAL.Entity
+﻿using Domain.Enums;
+
+namespace Domain.Entity
 {
     public class Bid
     {

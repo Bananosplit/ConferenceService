@@ -1,8 +1,7 @@
-﻿using App.Utils;
+﻿using App.BidServices;
 using ConferenceService.Models;
-using ConferenceService.Utils;
-using DAL.Entity;
-using DAL.Repositories.Interfaces;
+using Domain.Entity;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -12,20 +11,15 @@ namespace ConferenceService.controllers
     [ApiController]
     public class BidController : ControllerBase
     {
-        private readonly IBidRepository bidRepo;
+        private readonly BidServices bidService;
 
-        public BidController(IBidRepository bidRepo) => this.bidRepo = bidRepo;
+        public BidController(BidServices bidRepo) => this.bidService = bidRepo;
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BidDto bidDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest("Data is not valid");
-
-            var existBid = await bidRepo.Get(bidDto.UserId);
-
-            if (existBid != null)
-                return BadRequest("The Bid already EXISTS. You cant create more than one bid");
 
             var bid = new Bid()
             {
@@ -38,7 +32,7 @@ namespace ConferenceService.controllers
                 IsSent = false
             };
 
-            var result = await bidRepo.Create(bid);
+            var result = await bidService.Create(bid);
 
             if (result == false)
                 return Conflict();
@@ -47,22 +41,23 @@ namespace ConferenceService.controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Edit([FromBody] BidDto bid, Guid id)
+        public async Task<IActionResult> Edit([FromBody] BidDto bidDto, Guid id)
         {
             if (!ModelState.IsValid)
                 return BadRequest("The bid not found");
 
-            await Console.Out.WriteLineAsync(id.ToString());
+            var bid = new Bid()
+            {
+                Id = bidDto.UserId,
+                Name = bidDto?.Name,
+                Description = bidDto?.Description ?? "",
+                Plan = bidDto?.Plan,
+                ActivityType = (ActivityType)bidDto.ActivityTypeId,
+                SendDate = DateTime.UtcNow,
+                IsSent = false
+            };
 
-            var existBid = await bidRepo.Get(bid.UserId);
-
-            if (existBid == null)
-                return NotFound("The bid not found");
-
-            if (existBid.IsSent == true)
-                return BadRequest("You can't edit already sent bid");
-
-            var result = await bidRepo.Update(existBid.FillBid(bid));
+            var result = await bidService.Update(bid);
 
             if (result == false)
                 return Conflict();
@@ -73,15 +68,8 @@ namespace ConferenceService.controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var existBid = await bidRepo.Get(id);
 
-            if (existBid is null)
-                return BadRequest("The bid not found");
-
-            if (existBid.IsSent == true)
-                return BadRequest("You can't delete already sent bid");
-
-            var result = await bidRepo.Delete(existBid);
+            var result = await bidService.Delete(id);
 
             if (result == false)
                 return Conflict();
@@ -92,28 +80,15 @@ namespace ConferenceService.controllers
         [HttpPost("{id}")]
         public async Task<IActionResult> SendToCommission(Guid id)
         {
-            Bid? existBid = await bidRepo.Get(id);
+           await bidService.SendToCommission(id);
 
-            if (ServiceValidation.ValidateBid(existBid, out string message) == false)
-                return BadRequest(message);
-
-            existBid.IsSent = true;
-            existBid.SendDate = DateTime.UtcNow;
-
-            var result = await bidRepo.Update(existBid);
-
-            if (result == false)
-                return Conflict();
-
-            return Ok();
+           return Ok();
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<string>>> GetActivityList()
+        public List<string> GetActivityList()
         {
-            var types = await bidRepo.GetActivityType();
-
-            return Ok(types);
+            return bidService.GetActivityType();
         }
     }
 }

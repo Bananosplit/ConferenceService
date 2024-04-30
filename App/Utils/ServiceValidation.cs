@@ -1,4 +1,6 @@
-﻿using DAL.Entity;
+﻿
+using Domain.Entity;
+using Domain.Enums;
 
 namespace App.Utils
 {

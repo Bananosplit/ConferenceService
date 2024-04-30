@@ -1,6 +1,6 @@
 using ConferenceService.Utils;
 using DAL.Repositories;
-using DAL.Repositories.Interfaces;
+using Domain.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,7 +1,8 @@
-﻿using DAL.Entity;
+﻿using Domain.Entity;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Data
+namespace DAL.Context
 {
     public class ConferenceServiceDBContext : DbContext
     {

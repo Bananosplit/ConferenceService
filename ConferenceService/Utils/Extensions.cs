@@ -1,6 +1,7 @@
 ﻿using ConferenceService.Models;
-using DAL.Data;
-using DAL.Entity;
+using DAL.Context;
+using Domain.Entity;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 

@@ -1,6 +1,6 @@
-﻿using DAL.Data;
-using DAL.Entity;
-using DAL.Repositories.Interfaces;
+﻿using DAL.Context;
+using Domain.Entity;
+using Domain.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -108,9 +108,5 @@ namespace DAL.Repositories
             return true;
         }
 
-        public Task<ActivityType> GetActivityType()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

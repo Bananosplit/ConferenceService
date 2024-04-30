@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace DAL.Entity
+namespace Domain.Enums
 {
     public enum ActivityType
     {
