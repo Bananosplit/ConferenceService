@@ -1,19 +1,37 @@
-using ConferenceService.Core;
-using ConferenceService.Core.Repositories.Interfaces;
-using ConferenceService.Data;
-using ConferenceService.Data.Repositories;
-using Microsoft.EntityFrameworkCore;
+using App.BidServices;
+using Asp.Versioning;
+using ConferenceService.Utils;
+using DAL.Repositories;
+using Domain.interfaces.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddApiVersioning( opt =>
+{
+    opt.AssumeDefaultVersionWhenUnspecified = true;
+    opt.DefaultApiVersion = new ApiVersion(1,0);
+    opt.ReportApiVersions = true;
+    opt.ApiVersionReader = new UrlSegmentApiVersionReader();
+
+}).AddApiExplorer(opt =>
+{
+    opt.GroupNameFormat = "'v'V";
+    opt.SubstituteApiVersionInUrl = true;
+});
+
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ConferenceServiceDBContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddConferenceDbContext(builder.Configuration);
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-var app = builder.Build();
+builder.Services.AddScoped<IBidRepository, BidRepository>();
+builder.Services.AddScoped<BidServices>();
+
+
+var app = builder
+    .Build()
+    .MigrateDataBase();
 
 if (app.Environment.IsDevelopment())
 {
