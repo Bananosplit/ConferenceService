@@ -1,6 +1,6 @@
 ﻿using DAL.Context;
 using Domain.Entity;
-using Domain.Repositories.Interfaces;
+using Domain.interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 

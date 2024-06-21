@@ -1,7 +1,7 @@
 ﻿using App.Utils;
 using Domain.Entity;
 using Domain.Enums;
-using Domain.Repositories.Interfaces;
+using Domain.interfaces.Repositories;
 using System.ComponentModel;
 using System.Linq.Expressions;
 
@@ -20,10 +20,11 @@ namespace App.BidServices
             var existBid = await bidRepo.Get(Guid.NewGuid());
 
             if (existBid != null)
-                throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
+                return false;
+                //throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
 
             await bidRepo.Create(bid);
-            return false; 
+            return true; 
         }
 
         public async Task<bool> Update(Bid bid)
@@ -32,10 +33,11 @@ namespace App.BidServices
             var existBid = await bidRepo.Get(Guid.NewGuid());
 
             if (existBid != null)
-                throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
+                //throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
+                return false;
 
             await bidRepo.Update(bid);
-            return false;
+            return true;
         }   
         
         public async Task<bool> Delete(Guid id)
@@ -43,11 +45,12 @@ namespace App.BidServices
             //validation
             var existBid = await bidRepo.Get(id);
 
-            if (existBid != null)
-                throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
+            if (existBid == null)
+                //throw new ArgumentException("The Bid already EXISTS. You cant create more than one bid");
+                return false;
 
             await bidRepo.Delete(existBid);
-            return false;
+            return true;
         }
 
         public async Task<bool> SendToCommission(Guid id)
@@ -60,7 +63,7 @@ namespace App.BidServices
             existBid.IsSent = true;
             existBid.SendDate = DateTime.UtcNow;
 
-            var result = await bidRepo.Update(existBid);
+            bool result = await bidRepo.Update(existBid);
 
             return result;
         }
