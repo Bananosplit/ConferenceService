@@ -6,6 +6,8 @@ using Domain.interfaces.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddControllers();
 
 builder.Services.AddApiVersioning( opt =>
